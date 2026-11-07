@@ -71,6 +71,36 @@ docker images                      # check image sizes
 To see a bad checksum rejected: `$env:MODEL_SHA256 = "0" * 64`, run `docker compose down -v`, then start again.
 `/api/health` shows `model_loaded: false` with the reason, and `docker compose ps` shows the backend as unhealthy.
 
+## 5. CI/CD pipeline (GitHub Actions -> Azure VM)
+
+`.github/workflows/ci.yml` runs on every push:
+
+```
+backend tests ─┐
+               ├─> docker build + smoke test ─> push images to GHCR ─> deploy to VM
+frontend build ┘                                  (main only)           (main only)
+```
+
+- **Pull requests:** tests and the Docker smoke test only.
+- **Push to `main`:** also pushes `detection-backend` / `detection-frontend` images to
+  GHCR (tagged with the commit SHA and `latest`) and deploys them to the VM over SSH.
+- The VM runs `docker-compose.prod.yml` (images from GHCR, no build). The backend
+  downloads the model from `MODEL_URL` and checks `MODEL_SHA256`. The deploy job
+  passes only when `/api/health` reports `model_loaded: true`.
+- Re-run the pipeline by hand: Actions tab -> CI/CD -> Run workflow.
+
+Secrets live in the GitHub environment `production` (Settings -> Environments):
+
+| Secret | What it is |
+|---|---|
+| `VM_HOST` | VM public IP |
+| `VM_USER` | SSH user (e.g. `azureuser`) |
+| `VM_SSH_KEY` | private key matching a public key in the VM's `~/.ssh/authorized_keys` |
+| `MODEL_URL` | read-only SAS URL of the model blob (expires; renew it) |
+| `MODEL_SHA256` | checksum of that model file |
+
+The VM also needs Docker installed and inbound ports 22 and 80 open.
+
 ## How the model works
 
 1. `export_model.py` (run once) downloads pretrained `yolov8n.pt` (COCO: 80 everyday

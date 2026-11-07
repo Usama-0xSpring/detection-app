@@ -1,0 +1,25 @@
+# Used ON THE VM by the deploy job (copied there as docker-compose.yml).
+# Unlike docker-compose.yml it does not build: it runs the images that CI
+# already built and pushed to GHCR. Values come from a .env file the pipeline
+# writes next to this file. `:?` makes compose stop with a clear error if one
+# is missing.
+services:
+  backend:
+    image: ${IMAGE_PREFIX:?}/detection-backend:${IMAGE_TAG:?}
+    environment:
+      MODEL_URL: ${MODEL_URL:?}
+      MODEL_SHA256: ${MODEL_SHA256:?}
+    volumes:
+      - models:/app/models      # downloaded model survives restarts
+    restart: unless-stopped
+
+  frontend:
+    image: ${IMAGE_PREFIX:?}/detection-frontend:${IMAGE_TAG:?}
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  models:

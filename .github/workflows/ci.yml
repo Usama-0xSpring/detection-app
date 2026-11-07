@@ -1,15 +1,18 @@
-name: CI
+name: CI/CD
 
+# Pull requests: test + build only.
+# Push to main:  test + build, then publish images to GHCR and deploy to the VM.
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:   # lets you re-run the whole pipeline (and redeploy) by hand
 
-# a new push cancels the older run of the same branch
+# a new push cancels an older PR run, but never a run that may be deploying
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -79,3 +82,132 @@ jobs:
       - name: Stop the stack
         if: always()
         run: docker compose down -v
+
+  # ---------------------------------------------------------------------------
+  # Everything below runs only on main (never for pull requests).
+  # ---------------------------------------------------------------------------
+  publish-images:
+    name: Push images to GHCR
+    runs-on: ubuntu-latest
+    needs: docker-smoke-test
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      prefix: ${{ steps.meta.outputs.prefix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Image name prefix (GHCR requires lowercase)
+        id: meta
+        run: echo "prefix=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Tagged with the commit SHA (so any version can be redeployed/rolled back)
+      # and with "latest".
+      - name: Build and push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.prefix }}/detection-backend:${{ github.sha }}
+            ${{ steps.meta.outputs.prefix }}/detection-backend:latest
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          build-args: VITE_API_URL=/api
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.prefix }}/detection-frontend:${{ github.sha }}
+            ${{ steps.meta.outputs.prefix }}/detection-frontend:latest
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+
+  deploy:
+    name: Deploy to Azure VM
+    runs-on: ubuntu-latest
+    needs: publish-images
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    environment: production   # secrets VM_*, MODEL_* live in this environment
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    env:
+      VM_HOST: ${{ secrets.VM_HOST }}
+      VM_USER: ${{ secrets.VM_USER }}
+      IMAGE_PREFIX: ${{ needs.publish-images.outputs.prefix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        env:
+          VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VM_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # trust-on-first-use for this run; production setups pin the host key
+          ssh-keyscan -H "$VM_HOST" >> ~/.ssh/known_hosts
+
+      - name: Copy compose file and write .env on the VM
+        env:
+          MODEL_URL: ${{ secrets.MODEL_URL }}
+          MODEL_SHA256: ${{ secrets.MODEL_SHA256 }}
+        run: |
+          SSH="ssh -i $HOME/.ssh/deploy_key $VM_USER@$VM_HOST"
+          $SSH 'mkdir -p ~/detection-app'
+          scp -i ~/.ssh/deploy_key docker-compose.prod.yml "$VM_USER@$VM_HOST:detection-app/docker-compose.yml"
+          # secrets travel over stdin, not on a command line; file is private (umask 077)
+          printf "IMAGE_PREFIX=%s\nIMAGE_TAG=%s\nMODEL_URL='%s'\nMODEL_SHA256=%s\n" \
+            "$IMAGE_PREFIX" "$GITHUB_SHA" "$MODEL_URL" "$MODEL_SHA256" \
+            | $SSH 'umask 077 && cat > ~/detection-app/.env'
+
+      - name: Pull the new images and restart
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+        run: |
+          printf '%s' "$GHCR_TOKEN" | ssh -i ~/.ssh/deploy_key "$VM_USER@$VM_HOST" \
+            "docker login ghcr.io -u '$GHCR_USER' --password-stdin"
+          ssh -i ~/.ssh/deploy_key "$VM_USER@$VM_HOST" \
+            "cd ~/detection-app && docker compose pull && docker compose up -d --remove-orphans && docker image prune -f"
+
+      # Passes only when the backend has downloaded and loaded the model.
+      - name: Wait until the model is loaded
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS "http://$VM_HOST/api/health" -o health.json 2>/dev/null \
+               && grep -q '"model_loaded":true' health.json; then
+              echo "Deployed. Health:"; cat health.json; echo
+              exit 0
+            fi
+            echo "waiting for the app ($i/60)..."; sleep 5
+          done
+          echo "Health check failed. Last response:"; cat health.json 2>/dev/null || true
+          exit 1
+
+      - name: Show VM container status and logs on failure
+        if: failure()
+        run: |
+          ssh -i ~/.ssh/deploy_key "$VM_USER@$VM_HOST" \
+            "cd ~/detection-app && docker compose ps && docker compose logs --tail 80"
+
+      - name: Log out of GHCR on the VM
+        if: always()
+        run: ssh -i ~/.ssh/deploy_key "$VM_USER@$VM_HOST" "docker logout ghcr.io" || true
