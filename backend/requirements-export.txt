@@ -1,0 +1,3 @@
+# Only needed once, to create models/model.onnx. NOT needed to run the API.
+ultralytics>=8.2
+onnx>=1.16

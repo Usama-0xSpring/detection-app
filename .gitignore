@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+.env.*
+# model weights are artifacts, not source (see README: models are fetched/exported)
+*.pt
+*.onnx
