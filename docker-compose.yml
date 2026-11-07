@@ -1,0 +1,24 @@
+services:
+  backend:
+    build: ./backend
+    environment:
+      # where to download the model from, and the checksum it must match
+      MODEL_URL: ${MODEL_URL:-}
+      MODEL_SHA256: ${MODEL_SHA256:-}
+    volumes:
+      - models:/app/models      # keeps the downloaded model between restarts
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: /api
+    ports:
+      - "80:80"                 # if port 80 is busy on your PC, use "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  models:

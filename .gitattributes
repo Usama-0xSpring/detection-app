@@ -1,0 +1,5 @@
+# keep LF line endings so Linux containers/VMs never see Windows CRLF
+* text=auto eol=lf
+*.jpg binary
+*.png binary
+*.onnx binary

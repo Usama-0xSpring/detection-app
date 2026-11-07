@@ -45,6 +45,32 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
+## 4. Run with Docker (backend + frontend containers)
+
+Needs Docker Desktop running. From the repo root, in PowerShell:
+
+```powershell
+# checksum of your local model (the container verifies the file against it)
+$env:MODEL_SHA256 = (Get-FileHash backend\models\model.onnx -Algorithm SHA256).Hash.ToLower()
+
+# build and start; the override file makes the container "download" your local model
+docker compose -f docker-compose.yml -f docker-compose.local-model.yml up --build
+```
+Open http://localhost, upload an image. API health: http://localhost/api/health
+
+Useful commands:
+
+```powershell
+docker compose ps                  # status and health of each container
+docker compose logs -f backend     # watch the model download and verify
+docker compose down                # stop (keeps the downloaded model volume)
+docker compose down -v             # stop AND delete the model volume (forces a re-download)
+docker images                      # check image sizes
+```
+
+To see a bad checksum rejected: `$env:MODEL_SHA256 = "0" * 64`, run `docker compose down -v`, then start again.
+`/api/health` shows `model_loaded: false` with the reason, and `docker compose ps` shows the backend as unhealthy.
+
 ## How the model works
 
 1. `export_model.py` (run once) downloads pretrained `yolov8n.pt` (COCO: 80 everyday

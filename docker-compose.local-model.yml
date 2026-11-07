@@ -1,0 +1,13 @@
+# LOCAL TESTING ONLY: lets the container "download" your local model.onnx
+# through a file:// URL, so you can test the download + checksum logic
+# without Azure. Use together with docker-compose.yml:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.local-model.yml up --build
+#
+# MODEL_SHA256 must be set in your shell (see README).
+services:
+  backend:
+    environment:
+      MODEL_URL: file:///seed/model.onnx
+    volumes:
+      - ./backend/models/model.onnx:/seed/model.onnx:ro
