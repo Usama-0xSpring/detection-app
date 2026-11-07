@@ -69,5 +69,7 @@ That overwrites `models/model.onnx` and `models/labels.txt`. No code changes.
 |---|---|---|
 | `MODEL_PATH` | `backend/models/model.onnx` | backend |
 | `LABELS_PATH` | `backend/models/labels.txt` | backend |
+| `MODEL_URL` | _(unset)_ download the model here if the file is missing (https; may be a secret SAS URL) | backend |
+| `MODEL_SHA256` | _(unset)_ expected checksum; **required** when `MODEL_URL` is set | backend |
 | `CORS_ORIGINS` | `http://localhost:5173` | backend |
 | `VITE_API_URL` | `http://localhost:8000` | frontend (build time) |

@@ -9,22 +9,31 @@ from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image, UnidentifiedImageError
 
 from detector import Detector
+from model_store import ModelStoreError, ensure_model
 
 BASE_DIR = Path(__file__).parent
 MODEL_PATH = Path(os.getenv("MODEL_PATH", BASE_DIR / "models" / "model.onnx"))
 LABELS_PATH = Path(os.getenv("LABELS_PATH", BASE_DIR / "models" / "labels.txt"))
+MODEL_URL = os.getenv("MODEL_URL") or None  # may contain a secret SAS token
+MODEL_SHA256 = os.getenv("MODEL_SHA256") or None
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
 MAX_UPLOAD_MB = 10
 
-state = {"detector": None}
+state = {"detector": None, "model_sha256": None, "model_error": None}
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if MODEL_PATH.exists():
-        state["detector"] = Detector(MODEL_PATH, LABELS_PATH)
-    else:
-        print(f"WARNING: model not found at {MODEL_PATH}. Run: python export_model.py")
+    try:
+        state["model_sha256"] = ensure_model(MODEL_PATH, MODEL_URL, MODEL_SHA256)
+        if state["model_sha256"]:
+            state["detector"] = Detector(MODEL_PATH, LABELS_PATH)
+        else:
+            state["model_error"] = "model not found; run export_model.py or set MODEL_URL"
+    except Exception as e:  # keep the API up so /health can explain what is wrong
+        state["model_error"] = str(e)
+    if state["model_error"]:
+        print(f"WARNING: model not loaded: {state['model_error']}")
     yield
 
 
@@ -39,7 +48,12 @@ app.add_middleware(
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "model_loaded": state["detector"] is not None}
+    return {
+        "status": "ok",
+        "model_loaded": state["detector"] is not None,
+        "model_sha256": state["model_sha256"],
+        "model_error": state["model_error"],
+    }
 
 
 @app.post("/predict")
