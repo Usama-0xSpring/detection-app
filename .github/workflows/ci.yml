@@ -1,62 +1,126 @@
+# =============================================================================
+# CI/CD pipeline for the detection app
+#
+#   backend tests ─┐
+#                  ├─> docker build + smoke test ─> push images to GHCR ─> deploy to VM
+#   frontend build ┘                                  (main only)           (main only)
+#
+# GitHub finds this file automatically because it lives in .github/workflows/.
+# =============================================================================
+
+# Name shown in the Actions tab.
 name: CI/CD
 
-# Pull requests: test + build only.
-# Push to main:  test + build, then publish images to GHCR and deploy to the VM.
+# -----------------------------------------------------------------------------
+# WHEN does the workflow start?
+#   - push to main        -> full pipeline: test, build, publish images, deploy
+#   - pull request to main -> tests, build and smoke test only (never deploys,
+#                             see the `if:` on the last two jobs)
+#   - workflow_dispatch   -> the "Run workflow" button; handy for a manual redeploy
+# -----------------------------------------------------------------------------
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
-  workflow_dispatch:   # lets you re-run the whole pipeline (and redeploy) by hand
+  workflow_dispatch:
 
-# a new push cancels an older PR run, but never a run that may be deploying
+# -----------------------------------------------------------------------------
+# Avoid piling up runs. A new push cancels an older *pull request* run, but never
+# a run on main, because that one may be in the middle of deploying.
+# -----------------------------------------------------------------------------
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# Default permissions for every job: read-only access to the repository.
+# (Jobs that need more, like pushing images, ask for it themselves below.)
 permissions:
   contents: read
 
 jobs:
+  # ===========================================================================
+  # JOB 1: Backend tests (runs on every push and pull request)
+  # Proves the Python code works. No model file is needed for these tests.
+  # ===========================================================================
   backend-tests:
     name: Backend tests
+    # GitHub gives each job a fresh Ubuntu machine ("runner").
     runs-on: ubuntu-latest
+    # Run every `run:` command below from the backend/ folder.
     defaults:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      # Download the repository code onto the runner.
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      # Install Python 3.11 and cache pip downloads so later runs are faster.
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
           cache-dependency-path: backend/requirements-dev.txt
-      - run: pip install -r requirements-dev.txt
-      - run: pytest -q
 
+      # Install the app's packages plus the test tools (pytest, httpx).
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      # Run the tests. If any test fails, this job fails and nothing is deployed.
+      - name: Run tests
+        run: pytest -q
+
+  # ===========================================================================
+  # JOB 2: Frontend build (runs in parallel with the backend tests)
+  # Proves the React app compiles.
+  # ===========================================================================
   frontend-build:
     name: Frontend build
     runs-on: ubuntu-latest
+    # Run every `run:` command below from the frontend/ folder.
     defaults:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      # Download the repository code onto the runner.
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      # Install Node 20 and cache npm downloads.
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - run: npm ci
-      - run: npm run build
 
+      # Install exactly the versions in package-lock.json (reproducible builds).
+      - name: Install dependencies
+        run: npm ci
+
+      # Compile the React app. A syntax or import error fails the job here.
+      - name: Build the app
+        run: npm run build
+
+  # ===========================================================================
+  # JOB 3: Docker build and smoke test
+  # Waits for jobs 1 and 2 to pass, then builds both Docker images and starts
+  # the whole stack to check that it really runs.
+  # ===========================================================================
   docker-smoke-test:
     name: Docker build and smoke test
     runs-on: ubuntu-latest
+    # Only start if BOTH earlier jobs succeeded.
     needs: [backend-tests, frontend-build]
     steps:
-      - uses: actions/checkout@v4
+      # Download the repository code onto the runner.
+      - name: Check out the code
+        uses: actions/checkout@v4
 
+      # Build the backend and frontend images from their Dockerfiles and start
+      # them in the background with Docker Compose (docker-compose.yml).
       - name: Build images and start the stack
         run: docker compose up -d --build
 
@@ -65,6 +129,7 @@ jobs:
       # start, and nginx correctly proxies /api to FastAPI.
       - name: Wait for the app through nginx
         run: |
+          # Try up to 30 times (every 2 seconds) until /api/health answers.
           for i in $(seq 1 30); do
             if curl -fsS http://localhost/api/health -o health.json; then
               echo "Backend answered through nginx:"; cat health.json; echo
@@ -72,13 +137,17 @@ jobs:
             fi
             echo "waiting ($i/30)..."; sleep 2
           done
+          # The answer must say status ok (this fails the step if it does not).
           grep -q '"status":"ok"' health.json
+          # The React page must also be served (looks for its root element).
           curl -fsS http://localhost/ | grep -qi '<div id="root">'
 
+      # If anything above failed, print the container logs to help debugging.
       - name: Show container logs on failure
         if: failure()
         run: docker compose logs
 
+      # Always shut the stack down and remove its volume, pass or fail.
       - name: Stop the stack
         if: always()
         run: docker compose down -v
@@ -86,33 +155,52 @@ jobs:
   # ---------------------------------------------------------------------------
   # Everything below runs only on main (never for pull requests).
   # ---------------------------------------------------------------------------
+
+  # ===========================================================================
+  # JOB 4: Push images to GHCR (GitHub Container Registry)
+  # Builds the two images again and uploads them, tagged with the commit SHA,
+  # so the VM can pull exactly this version.
+  # ===========================================================================
   publish-images:
     name: Push images to GHCR
     runs-on: ubuntu-latest
+    # Only start if the smoke test passed.
     needs: docker-smoke-test
+    # Skip for pull requests: run only for pushes (and manual runs) on main.
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    # This job needs extra permission: write images to the registry.
     permissions:
       contents: read
       packages: write
+    # Hand the image name prefix to the deploy job below.
     outputs:
       prefix: ${{ steps.meta.outputs.prefix }}
     steps:
-      - uses: actions/checkout@v4
+      # Download the repository code onto the runner.
+      - name: Check out the code
+        uses: actions/checkout@v4
 
+      # Build the image prefix, e.g. ghcr.io/<owner>. GHCR needs lowercase, and
+      # ${VAR,,} is bash for "make lowercase". Saved as the output "prefix".
       - name: Image name prefix (GHCR requires lowercase)
         id: meta
         run: echo "prefix=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
-      - uses: docker/setup-buildx-action@v3
+      # Set up Docker Buildx, the builder that supports build caching.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - uses: docker/login-action@v3
+      # Log in to GHCR. GITHUB_TOKEN is created by GitHub for this run, so no
+      # password needs to be stored anywhere.
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Tagged with the commit SHA (so any version can be redeployed/rolled back)
-      # and with "latest".
+      # Build the backend image and push it with two tags: the commit SHA (so any
+      # version can be redeployed or rolled back) and "latest".
       - name: Build and push backend
         uses: docker/build-push-action@v6
         with:
@@ -121,9 +209,12 @@ jobs:
           tags: |
             ${{ steps.meta.outputs.prefix }}/detection-backend:${{ github.sha }}
             ${{ steps.meta.outputs.prefix }}/detection-backend:latest
+          # Reuse cached layers from earlier runs to speed up the build.
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
 
+      # Same for the frontend. VITE_API_URL=/api makes the browser call /api on
+      # the same address, which nginx forwards to the backend.
       - name: Build and push frontend
         uses: docker/build-push-action@v6
         with:
@@ -136,25 +227,41 @@ jobs:
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
+  # ===========================================================================
+  # JOB 5: Deploy to the Azure VM
+  # Connects to the VM over SSH, hands it the settings, pulls the new images
+  # and restarts the app, then checks that the model really loaded.
+  # ===========================================================================
   deploy:
     name: Deploy to Azure VM
     runs-on: ubuntu-latest
+    # Only start after the images are pushed.
     needs: publish-images
+    # Skip for pull requests: run only for pushes (and manual runs) on main.
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    environment: production   # secrets VM_*, MODEL_* live in this environment
+    # The secrets VM_HOST, VM_USER, VM_SSH_KEY, MODEL_URL, MODEL_SHA256 live in
+    # this GitHub environment. There is no approval gate: the deploy is automatic.
+    environment: production
+    # Never run two deployments at the same time, and never cancel one half-way.
     concurrency:
       group: deploy-production
       cancel-in-progress: false
+    # Needs to read the pushed images (to log the VM in to GHCR).
     permissions:
       contents: read
       packages: read
+    # Values every step below can use as normal environment variables.
     env:
-      VM_HOST: ${{ secrets.VM_HOST }}
-      VM_USER: ${{ secrets.VM_USER }}
-      IMAGE_PREFIX: ${{ needs.publish-images.outputs.prefix }}
+      VM_HOST: ${{ secrets.VM_HOST }}                              # the VM's IP address
+      VM_USER: ${{ secrets.VM_USER }}                              # the SSH user, e.g. azureuser
+      IMAGE_PREFIX: ${{ needs.publish-images.outputs.prefix }}     # ghcr.io/<owner> from job 4
     steps:
-      - uses: actions/checkout@v4
+      # Download the repository code (needed for docker-compose.prod.yml).
+      - name: Check out the code
+        uses: actions/checkout@v4
 
+      # Prepare SSH on the runner: save the private key to a file with strict
+      # permissions and remember the VM's host key.
       - name: Configure SSH
         env:
           VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
@@ -165,32 +272,44 @@ jobs:
           # trust-on-first-use for this run; production setups pin the host key
           ssh-keyscan -H "$VM_HOST" >> ~/.ssh/known_hosts
 
+      # Put the deployment files on the VM: the production compose file, plus a
+      # private .env file with the image version and the model settings.
       - name: Copy compose file and write .env on the VM
         env:
           MODEL_URL: ${{ secrets.MODEL_URL }}
           MODEL_SHA256: ${{ secrets.MODEL_SHA256 }}
         run: |
+          # Shortcut for "ssh into the VM with our key".
           SSH="ssh -i $HOME/.ssh/deploy_key $VM_USER@$VM_HOST"
+          # Make sure the app folder exists on the VM.
           $SSH 'mkdir -p ~/detection-app'
+          # Copy the production compose file (it uses images, it does not build).
           scp -i ~/.ssh/deploy_key docker-compose.prod.yml "$VM_USER@$VM_HOST:detection-app/docker-compose.yml"
           # secrets travel over stdin, not on a command line; file is private (umask 077)
+          # IMAGE_TAG is the commit SHA, so the VM runs exactly the images built above.
           printf "IMAGE_PREFIX=%s\nIMAGE_TAG=%s\nMODEL_URL='%s'\nMODEL_SHA256=%s\n" \
             "$IMAGE_PREFIX" "$GITHUB_SHA" "$MODEL_URL" "$MODEL_SHA256" \
             | $SSH 'umask 077 && cat > ~/detection-app/.env'
 
+      # Download the new images on the VM and restart the containers with them.
       - name: Pull the new images and restart
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USER: ${{ github.actor }}
         run: |
+          # Log the VM in to GHCR using the run's temporary token (sent over stdin).
           printf '%s' "$GHCR_TOKEN" | ssh -i ~/.ssh/deploy_key "$VM_USER@$VM_HOST" \
             "docker login ghcr.io -u '$GHCR_USER' --password-stdin"
+          # Pull the images named in .env, start/replace the containers, remove
+          # leftover containers, and clean up old unused images.
           ssh -i ~/.ssh/deploy_key "$VM_USER@$VM_HOST" \
             "cd ~/detection-app && docker compose pull && docker compose up -d --remove-orphans && docker image prune -f"
 
       # Passes only when the backend has downloaded and loaded the model.
       - name: Wait until the model is loaded
         run: |
+          # Try up to 60 times (every 5 seconds = 5 minutes) to give the model
+          # time to download from Blob on the first start.
           for i in $(seq 1 60); do
             if curl -fsS "http://$VM_HOST/api/health" -o health.json 2>/dev/null \
                && grep -q '"model_loaded":true' health.json; then
@@ -199,15 +318,19 @@ jobs:
             fi
             echo "waiting for the app ($i/60)..."; sleep 5
           done
+          # Never became healthy: show what the app last said and fail the job.
           echo "Health check failed. Last response:"; cat health.json 2>/dev/null || true
           exit 1
 
+      # If the deploy failed, show the container status and last log lines from
+      # the VM so you can see why (for example a bad checksum or expired SAS URL).
       - name: Show VM container status and logs on failure
         if: failure()
         run: |
           ssh -i ~/.ssh/deploy_key "$VM_USER@$VM_HOST" \
             "cd ~/detection-app && docker compose ps && docker compose logs --tail 80"
 
+      # Always remove the temporary GHCR login from the VM, pass or fail.
       - name: Log out of GHCR on the VM
         if: always()
         run: ssh -i ~/.ssh/deploy_key "$VM_USER@$VM_HOST" "docker logout ghcr.io" || true
