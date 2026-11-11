@@ -47,7 +47,7 @@ export default function App() {
 
   return (
     <main className="container">
-      <h1>Object Detection Demo</h1>
+      <h1>Objects Detection Demo</h1>
       <p className="hint">Upload an image to run the YOLOv8n model (pretrained on everyday objects; swap in a signature model later).</p>
 
       <div className="controls">
