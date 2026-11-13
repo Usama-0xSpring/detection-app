@@ -1,0 +1,169 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Architecture" id="detection-app-arch">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1900" pageHeight="1150" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Detection App: push to main, deployed to an Azure VM automatically" style="text;html=1;align=left;verticalAlign=middle;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="20" y="5" width="1000" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="gha" value="GitHub Actions: CI/CD (ci.yml)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;dashPattern=8 4;fillColor=#f4fbf4;strokeColor=#82b366;strokeWidth=2;verticalAlign=top;fontStyle=1;fontSize=13;;shape=label;image=data:image/svg+xml,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA2NCA2NCc+PGNpcmNsZSBjeD0nMzInIGN5PSczMicgcj0nMzAnIGZpbGw9JyMyMDg4RkYnLz48cGF0aCBkPSdNMjQgMThMNDYgMzJMMjQgNDZaJyBmaWxsPScjZmZmJy8+PC9zdmc+;imageAlign=left;imageVerticalAlign=top;imageWidth=30;imageHeight=30;spacingLeft=36;spacingRight=6;" vertex="1" parent="1">
+          <mxGeometry x="520" y="60" width="270" height="520" as="geometry" />
+        </mxCell>
+        <mxCell id="az" value="Microsoft Azure  |  Resource group: rg-demo" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;dashPattern=8 4;fillColor=#fffaf0;strokeColor=#d79b00;strokeWidth=2;verticalAlign=top;fontStyle=1;fontSize=14;;shape=label;image=img/lib/azure2/general/Resource_Groups.svg;imageAlign=left;imageVerticalAlign=top;imageWidth=32;imageHeight=32;spacingLeft=40;spacingRight=6;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="40" width="520" height="620" as="geometry" />
+        </mxCell>
+        <mxCell id="nsg" value="Network Security Group (ports 80, 22)" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#eef5ff;strokeColor=#6c8ebf;verticalAlign=top;fontSize=12;fontStyle=1;;shape=label;image=img/lib/azure2/networking/Network_Security_Groups.svg;imageAlign=left;imageVerticalAlign=top;imageWidth=30;imageHeight=30;spacingLeft=34;spacingRight=6;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="90" width="300" height="395" as="geometry" />
+        </mxCell>
+        <mxCell id="vm" value="Azure VM, 2 vCPU / 4 GiB&lt;br&gt;Docker Compose stack" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;verticalAlign=top;fontSize=12;fontStyle=1;;shape=label;image=img/lib/azure2/compute/Virtual_Machine.svg;imageAlign=left;imageVerticalAlign=top;imageWidth=30;imageHeight=30;spacingLeft=34;spacingRight=6;" vertex="1" parent="1">
+          <mxGeometry x="1105" y="125" width="270" height="340" as="geometry" />
+        </mxCell>
+        <mxCell id="dev" value="Developer laptop&lt;br&gt;VS Code + Git" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=2;fontSize=13;;shape=label;image=img/lib/clip_art/computers/Laptop_128x128.png;imageAlign=left;imageVerticalAlign=middle;imageWidth=44;imageHeight=44;spacingLeft=48;spacingRight=6;align=left;" vertex="1" parent="1">
+          <mxGeometry x="20" y="260" width="140" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="repo" value="&lt;b&gt;GitHub repository: detection-app&lt;/b&gt;&lt;br&gt;&lt;br&gt;/frontend (React)&lt;br&gt;/backend (FastAPI)&lt;br&gt;/.github/workflows (ci.yml)&lt;br&gt;Dockerfiles, compose files" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=12;;shape=label;image=data:image/svg+xml,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCc+PHBhdGggZmlsbD0nIzE4MTcxNycgZD0nTTEyIC4yOTdjLTYuNjMgMC0xMiA1LjM3My0xMiAxMiAwIDUuMzAzIDMuNDM4IDkuOCA4LjIwNSAxMS4zODUuNi4xMTMuODItLjI1OC44Mi0uNTc3IDAtLjI4NS0uMDEtMS4wNC0uMDE1LTIuMDQtMy4zMzguNzI0LTQuMDQyLTEuNjEtNC4wNDItMS42MUM0LjQyMiAxOC4wNyAzLjYzMyAxNy43IDMuNjMzIDE3LjdjLTEuMDg3LS43NDQuMDg0LS43MjkuMDg0LS43MjkgMS4yMDUuMDg0IDEuODM4IDEuMjM2IDEuODM4IDEuMjM2IDEuMDcgMS44MzUgMi44MDkgMS4zMDUgMy40OTUuOTk4LjEwOC0uNzc2LjQxNy0xLjMwNS43Ni0xLjYwNS0yLjY2NS0uMy01LjQ2Ni0xLjMzMi01LjQ2Ni01LjkzIDAtMS4zMS40NjUtMi4zOCAxLjIzNS0zLjIyLS4xMzUtLjMwMy0uNTQtMS41MjMuMTA1LTMuMTc2IDAgMCAxLjAwNS0uMzIyIDMuMyAxLjIzLjk2LS4yNjcgMS45OC0uMzk5IDMtLjQwNSAxLjAyLjAwNiAyLjA0LjEzOCAzIC40MDUgMi4yOC0xLjU1MiAzLjI4NS0xLjIzIDMuMjg1LTEuMjMuNjQ1IDEuNjUzLjI0IDIuODczLjEyIDMuMTc2Ljc2NS44NCAxLjIzIDEuOTEgMS4yMyAzLjIyIDAgNC42MS0yLjgwNSA1LjYyNS01LjQ3NSA1LjkyLjQyLjM2LjgxIDEuMDk2LjgxIDIuMjIgMCAxLjYwNi0uMDE1IDIuODk2LS4wMTUgMy4yODYgMCAuMzE1LjIxLjY5LjgyNS41N0MyMC41NjUgMjIuMDkyIDI0IDE3LjU5MiAyNCAxMi4yOTdjMC02LjYyNy01LjM3My0xMi0xMi0xMicvPjwvc3ZnPg==;imageAlign=left;imageVerticalAlign=middle;imageWidth=36;imageHeight=36;spacingLeft=48;spacingRight=6;align=left;" vertex="1" parent="1">
+          <mxGeometry x="220" y="170" width="230" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="sec" value="&lt;b&gt;GitHub Environment: production&lt;/b&gt;&lt;br&gt;Secrets: VM_HOST, VM_USER,&lt;br&gt;VM_SSH_KEY, MODEL_URL,&lt;br&gt;MODEL_SHA256" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;fontSize=12;;shape=label;image=data:image/svg+xml,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA2NCA2NCc+PHJlY3QgeD0nMTQnIHk9JzI4JyB3aWR0aD0nMzYnIGhlaWdodD0nMjgnIHJ4PSc1JyBmaWxsPScjYjg1NDUwJy8+PHBhdGggZD0nTTIyIDI4di04YTEwIDEwIDAgMCAxIDIwIDB2OCcgZmlsbD0nbm9uZScgc3Ryb2tlPScjYjg1NDUwJyBzdHJva2Utd2lkdGg9JzUnLz48Y2lyY2xlIGN4PSczMicgY3k9JzQyJyByPSc0JyBmaWxsPScjZmZmJy8+PC9zdmc+;imageAlign=left;imageVerticalAlign=middle;imageWidth=34;imageHeight=34;spacingLeft=48;spacingRight=6;align=left;" vertex="1" parent="1">
+          <mxGeometry x="220" y="470" width="230" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="j1" value="Backend tests&lt;br&gt;(pytest)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="540" y="105" width="110" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="j2" value="Frontend build&lt;br&gt;(npm)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="660" y="105" width="110" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="j3" value="Docker build + smoke test&lt;br&gt;(compose up, check /api/health)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="540" y="200" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="j4" value="Push images to GHCR&lt;br&gt;tagged with commit SHA&lt;br&gt;&lt;i&gt;(main only)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="540" y="295" width="230" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="j5" value="&lt;b&gt;Deploy job&lt;/b&gt; &lt;i&gt;(main only, no approval)&lt;/i&gt;&lt;br&gt;copy compose file, write private .env,&lt;br&gt;docker compose pull + up -d,&lt;br&gt;wait until model_loaded is true" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#82b366;strokeColor=#5a8a3e;fontColor=#ffffff;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="540" y="400" width="230" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="ghcr" value="&lt;b&gt;GitHub Container Registry&lt;/b&gt;&lt;br&gt;detection-backend&lt;br&gt;detection-frontend" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=2;fontSize=12;;shape=label;image=data:image/svg+xml,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCc+PHBhdGggZmlsbD0nIzE4MTcxNycgZD0nTTEyIC4yOTdjLTYuNjMgMC0xMiA1LjM3My0xMiAxMiAwIDUuMzAzIDMuNDM4IDkuOCA4LjIwNSAxMS4zODUuNi4xMTMuODItLjI1OC44Mi0uNTc3IDAtLjI4NS0uMDEtMS4wNC0uMDE1LTIuMDQtMy4zMzguNzI0LTQuMDQyLTEuNjEtNC4wNDItMS42MUM0LjQyMiAxOC4wNyAzLjYzMyAxNy43IDMuNjMzIDE3LjdjLTEuMDg3LS43NDQuMDg0LS43MjkuMDg0LS43MjkgMS4yMDUuMDg0IDEuODM4IDEuMjM2IDEuODM4IDEuMjM2IDEuMDcgMS44MzUgMi44MDkgMS4zMDUgMy40OTUuOTk4LjEwOC0uNzc2LjQxNy0xLjMwNS43Ni0xLjYwNS0yLjY2NS0uMy01LjQ2Ni0xLjMzMi01LjQ2Ni01LjkzIDAtMS4zMS40NjUtMi4zOCAxLjIzNS0zLjIyLS4xMzUtLjMwMy0uNTQtMS41MjMuMTA1LTMuMTc2IDAgMCAxLjAwNS0uMzIyIDMuMyAxLjIzLjk2LS4yNjcgMS45OC0uMzk5IDMtLjQwNSAxLjAyLjAwNiAyLjA0LjEzOCAzIC40MDUgMi4yOC0xLjU1MiAzLjI4NS0xLjIzIDMuMjg1LTEuMjMuNjQ1IDEuNjUzLjI0IDIuODczLjEyIDMuMTc2Ljc2NS44NCAxLjIzIDEuOTEgMS4yMyAzLjIyIDAgNC42MS0yLjgwNSA1LjYyNS01LjQ3NSA1LjkyLjQyLjM2LjgxIDEuMDk2LjgxIDIuMjIgMCAxLjYwNi0uMDE1IDIuODk2LS4wMTUgMy4yODYgMCAuMzE1LjIxLjY5LjgyNS41N0MyMC41NjUgMjIuMDkyIDI0IDE3LjU5MiAyNCAxMi4yOTdjMC02LjYyNy01LjM3My0xMi0xMi0xMicvPjwvc3ZnPg==;imageAlign=left;imageVerticalAlign=middle;imageWidth=34;imageHeight=34;spacingLeft=48;spacingRight=6;align=left;" vertex="1" parent="1">
+          <mxGeometry x="830" y="290" width="190" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ngx" value="nginx + React&lt;br&gt;(port 80, public)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;;shape=label;image=data:image/svg+xml,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA2NCA2NCc+PHBvbHlnb24gcG9pbnRzPSczMiw0IDU2LDE4IDU2LDQ2IDMyLDYwIDgsNDYgOCwxOCcgZmlsbD0nIzAwOTYzOScvPjxwYXRoIGQ9J00yNCA0NFYyMGg0bDggMTNWMjBoNHYyNGgtNGwtOC0xM3YxM3onIGZpbGw9JyNmZmYnLz48L3N2Zz4=;imageAlign=left;imageVerticalAlign=middle;imageWidth=34;imageHeight=34;spacingLeft=48;spacingRight=6;align=left;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="175" width="240" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="api" value="FastAPI + onnxruntime&lt;br&gt;(internal port 8000)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;;shape=label;image=data:image/svg+xml,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA2NCA2NCc+PGNpcmNsZSBjeD0nMzInIGN5PSczMicgcj0nMzAnIGZpbGw9JyMwMDk2ODgnLz48cGF0aCBkPSdNMzUgMTBMMjAgMzZoMTBsLTMgMTggMTctMjhIMzN6JyBmaWxsPScjZmZmJy8+PC9zdmc+;imageAlign=left;imageVerticalAlign=middle;imageWidth=34;imageHeight=34;spacingLeft=48;spacingRight=6;align=left;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="290" width="240" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="vol" value="model cache volume&lt;br&gt;(/app/models)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="390" width="240" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="blob" value="&lt;b&gt;Azure Blob Storage&lt;/b&gt;&lt;br&gt;container: models&lt;br&gt;v1/model.onnx (versioned)&lt;br&gt;read-only SAS URL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=12;;shape=label;image=img/lib/azure2/storage/Storage_Accounts.svg;imageAlign=left;imageVerticalAlign=middle;imageWidth=40;imageHeight=40;spacingLeft=48;spacingRight=6;align=left;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="520" width="280" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="users" value="End user&lt;br&gt;web browser" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=2;fontSize=13;;shape=label;image=img/lib/clip_art/computers/Monitor_128x128.png;imageAlign=left;imageVerticalAlign=middle;imageWidth=44;imageHeight=44;spacingLeft=48;spacingRight=6;align=left;" vertex="1" parent="1">
+          <mxGeometry x="1640" y="160" width="150" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="1  git push to main" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;strokeColor=#1f6feb;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;" edge="1" parent="1" source="dev" target="repo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="2  workflow triggers" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;strokeColor=#1f6feb;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;" edge="1" parent="1" source="repo" target="gha">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_j1_j3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;strokeColor=#82b366;exitX=0.5;exitY=1;entryX=0.25;entryY=0;" edge="1" parent="1" source="j1" target="j3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_j2_j3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;strokeColor=#82b366;exitX=0.5;exitY=1;entryX=0.75;entryY=0;" edge="1" parent="1" source="j2" target="j3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_j3_j4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;strokeColor=#82b366;" edge="1" parent="1" source="j3" target="j4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_j4_j5" value="3  deploy job" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;strokeColor=#82b366;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;" edge="1" parent="1" source="j4" target="j5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_push" value="push images" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;strokeColor=#9673a6;labelBackgroundColor=#ffffff;fontSize=11;" edge="1" parent="1" source="j4" target="ghcr">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="5  VM downloads the images (when told to)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;strokeColor=#9673a6;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;exitX=1;exitY=0.5;entryX=0;entryY=0.35;" edge="1" parent="1" source="ghcr" target="vm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="4  SSH: tell the VM to run docker compose pull + up -d" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;strokeColor=#1f6feb;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;exitX=1;exitY=0.5;entryX=0;entryY=0.85;" edge="1" parent="1" source="j5" target="vm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_sec" value="secrets" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;dashed=1;strokeColor=#b85450;labelBackgroundColor=#ffffff;fontSize=11;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="sec" target="j5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="6  first start: download model, verify SHA256" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;strokeColor=#d79b00;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" edge="1" parent="1" source="blob" target="vol">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="7  /api" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;strokeColor=#82b366;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;" edge="1" parent="1" source="ngx" target="api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" value="8  HTTP request" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;strokeColor=#d79b00;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;exitX=0;exitY=0.25;entryX=1;entryY=0.25;" edge="1" parent="1" source="users" target="ngx">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" value="9  JSON detections, boxes drawn" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;strokeColor=#d79b00;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;exitX=1;exitY=0.75;entryX=0;entryY=0.75;" edge="1" parent="1" source="ngx" target="users">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10a" value="10  logs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;dashed=1;strokeColor=#666666;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;" edge="1" parent="1" source="gha" target="log">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10b" value="10  logs, metrics" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;dashed=1;strokeColor=#666666;labelBackgroundColor=#ffffff;fontStyle=1;fontSize=11;exitX=0.3;exitY=1;entryX=1;entryY=0.5;" edge="1" parent="1" source="az" target="log">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="log" value="&lt;b&gt;Logging and monitoring (basic)&lt;/b&gt;&lt;br&gt;GitHub Actions run logs&lt;br&gt;docker compose logs on the VM&lt;br&gt;Azure portal VM metrics&lt;br&gt;Cost Management budget alert" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#000000;strokeWidth=2;fontSize=12;;shape=label;image=img/lib/azure2/management_governance/Monitor.svg;imageAlign=left;imageVerticalAlign=middle;imageWidth=40;imageHeight=40;spacingLeft=48;spacingRight=6;align=left;" vertex="1" parent="1">
+          <mxGeometry x="520" y="700" width="520" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="cleanup" value="&lt;b&gt;Cleanup:&lt;/b&gt; az group delete -n rg-demo --yes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="700" width="230" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="mtitle" value="Model update flow (no image rebuild)" style="text;html=1;align=left;verticalAlign=middle;fontSize=14;fontStyle=1;fontColor=#1a7f5a;" vertex="1" parent="1">
+          <mxGeometry x="220" y="835" width="500" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="m1" value="Train on&lt;br&gt;Colab / Kaggle" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="220" y="870" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="m2" value="Export to ONNX&lt;br&gt;(export_model.py)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="430" y="870" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="m3" value="Upload new version&lt;br&gt;to Blob (v2/model.onnx)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="640" y="870" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="m4" value="Update MODEL_URL and&lt;br&gt;MODEL_SHA256 secrets" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="850" y="870" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="m5" value="Re-run workflow&lt;br&gt;(Run workflow button)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#82b366;strokeColor=#5a8a3e;fontColor=#ffffff;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="870" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="em1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;strokeColor=#82b366;" edge="1" parent="1" source="m1" target="m2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;strokeColor=#82b366;" edge="1" parent="1" source="m2" target="m3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;strokeColor=#82b366;" edge="1" parent="1" source="m3" target="m4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="em4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;endArrow=block;flowAnimation=1;strokeColor=#82b366;" edge="1" parent="1" source="m4" target="m5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="mnote" value="Rollback: re-run with the previous MODEL_URL and MODEL_SHA256" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="1270" y="880" width="310" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" value="&lt;b&gt;Legend&lt;/b&gt;&lt;br&gt;1 git push to main  |  2 workflow triggers  |  3 deploy job runs after CI passes (no approval)  |  4 GitHub Actions tells the VM over SSH to run docker compose pull + up -d  |  5 the VM downloads the images from GHCR&lt;br&gt;6 backend downloads model.onnx from Blob and verifies SHA256 (first start only)  |  7 nginx proxies /api to FastAPI  |  8 user sends an HTTP request to the VM public IP&lt;br&gt;9 JSON detections returned, bounding boxes drawn in the browser  |  10 logs and metrics" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=8;fillColor=#ffffff;strokeColor=#1f2a44;strokeWidth=2;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="220" y="975" width="1360" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="ic_react" value="" style="shape=image;html=1;verticalLabelPosition=bottom;aspect=fixed;imageAspect=0;image=data:image/svg+xml,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9Jy0xMS41IC0xMC4yMyAyMyAyMC40Nic+PGNpcmNsZSByPScyLjA1JyBmaWxsPScjNjFEQUZCJy8+PGcgc3Ryb2tlPScjNjFEQUZCJyBmaWxsPSdub25lJz48ZWxsaXBzZSByeD0nMTEnIHJ5PSc0LjInLz48ZWxsaXBzZSByeD0nMTEnIHJ5PSc0LjInIHRyYW5zZm9ybT0ncm90YXRlKDYwKScvPjxlbGxpcHNlIHJ4PScxMScgcnk9JzQuMicgdHJhbnNmb3JtPSdyb3RhdGUoMTIwKScvPjwvZz48L3N2Zz4=;" vertex="1" parent="1">
+          <mxGeometry x="1318" y="181" width="36" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="ic_docker" value="" style="shape=image;html=1;verticalLabelPosition=bottom;aspect=fixed;imageAspect=0;image=img/lib/mscae/Docker.svg;" vertex="1" parent="1">
+          <mxGeometry x="1330" y="128" width="34" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="ic_cost" value="" style="shape=image;html=1;verticalLabelPosition=bottom;aspect=fixed;imageAspect=0;image=img/lib/azure2/management_governance/Cost_Management_and_Billing.svg;" vertex="1" parent="1">
+          <mxGeometry x="985" y="735" width="40" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="ghcr_note" value="The VM does not poll the registry: the deploy job tells it to pull." style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry y="374" width="190" height="36" x="830" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
